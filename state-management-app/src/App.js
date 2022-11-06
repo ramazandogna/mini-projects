@@ -14,7 +14,13 @@ function App() {
     }));
   };
 
-  const enabled = route.route;
+  const enabled =
+    route.route &&
+    route.stations.every((station) =>
+      Object.entries(station).every(([key, value]) =>
+        key === "errors" ? Object.values(value).length === 0 : value
+      )
+    );
 
   const addStation = () => {
     setRoute((route) => ({
@@ -25,8 +31,31 @@ function App() {
           name: "",
           lat: "",
           lon: "",
+          errors: {},
         },
       ],
+    }));
+  };
+
+  const handleStation = (value, name, key) => {
+    setRoute((route) => ({
+      ...route,
+      stations: route.stations.map((station, i) => {
+        if (key === i) {
+          station[name] = value;
+          let current = route.stations.find(
+            (r, index) => r[name] === value && key !== index
+          );
+          if (current) {
+            station.errors[
+              name
+            ] = `${name} değeri başka bir alanda ${value} değeri ile zaten tanımlanmış.`;
+          } else {
+            delete station.errors[name];
+          }
+        }
+        return station;
+      }),
     }));
   };
 
@@ -40,11 +69,25 @@ function App() {
       />
       <button onClick={addStation}>Yeni Durak Ekle</button>
       <hr />
-      <div>
-        <input type="text" placeholder="Durak Adı" />
-        <input type="text" placeholder="Enlem" />
-        <input type="text" placeholder="Boylam" />
-      </div>
+      {route.stations.map((route, key) => (
+        <div>
+          <input
+            type="text"
+            onChange={(e) => handleStation(e.target.value, "name", key)}
+            placeholder="Durak Adı"
+          />
+          <input
+            type="text"
+            onChange={(e) => handleStation(e.target.value, "lat", key)}
+            placeholder="Enlem"
+          />
+          <input
+            type="text"
+            onChange={(e) => handleStation(e.target.value, "lon", key)}
+            placeholder="Boylam"
+          />
+        </div>
+      ))}
       <hr />
       <button disabled={!enabled}>Kaydet</button>
       <br />
